@@ -42,6 +42,7 @@ CurrencyManager::CurrencyManager(Application &app):
 
 CurrencyManager::~CurrencyManager() {
     SaveCurrencyBase();
+    SaveCurrencyChecked();
 }
 
 void CurrencyManager::Update() {
@@ -56,6 +57,10 @@ void CurrencyManager::Update() {
 
 void CurrencyManager::UpdateBaseValue(int ind, double value) {
     currencies_[ind].base = value;
+}
+
+void CurrencyManager::UpdateCheckedValue(int ind, bool value) {
+    currencies_[ind].checked = value;
 }
 
 const double EPS = 1e-6;
@@ -102,15 +107,18 @@ void CurrencyManager::InitCurrency() {
     value.pop_back(); // Remove the last ";"
     data_.Set("currency_base", value);
     data_.Set("currency_last_value", value);
+    data_.Set("currency_checked", value);
 }
 
 void CurrencyManager::LoadCurrency() {
     // Way easier to use QT function instead of re-implementing a split() in C++
     QStringList list = QString(data_.Get("currency_base", "").c_str()).split(";");
+    QStringList list_checked = QString(data_.Get("currency_checked", "").c_str()).split(";");
     for (int i = 0; i < list.size(); i++) {
         CurrencyItem curr;
         curr.count = 0;
         curr.name = CurrencyAsString[i];
+        curr.checked = static_cast<bool>(list_checked[i].toInt());
         // We can't use the toDouble function from QT, because it encodes a double with a ","
         // Might be related to localisation issue, but anyway it's safer this way
         curr.base = std::stod(list[i].toStdString());
@@ -150,6 +158,16 @@ void CurrencyManager::SaveCurrencyValue() {
         data_.InsertCurrencyUpdate(update);
         data_.Set("currency_last_value", value);
     }
+}
+
+void CurrencyManager::SaveCurrencyChecked()
+{
+    std::string value ="";
+    for (auto currency : currencies_) {
+        value += std::to_string(static_cast<int>(currency.checked)) + ";";
+    }
+    value.pop_back();//Remove the last ";"
+    data_.Set("currency_checked", value);
 }
 
 void CurrencyManager::ExportCurrency() {
@@ -201,9 +219,14 @@ CurrencyDialog::CurrencyDialog(CurrencyManager& manager) : currency_manager_(man
     layout_->addWidget(new QLabel("Name"), 0, 0);
     layout_->addWidget(new QLabel("Value in Exalted Orbs"), 0, 1);
     layout_->addWidget(new QLabel("Amount an Exalted Orb can buy"), 0, 2);
+    layout_->addWidget(new QLabel("Message"), 0, 3);
     for (auto curr : currency_manager_.currencies()) {
         std::string text = curr.name + " (" + std::to_string(curr.count) + ")";
         QLabel* tmpName = new QLabel(text.c_str());
+        if (curr.count > curr.base)
+            tmpName->setStyleSheet("color:green;");
+        else
+            tmpName->setStyleSheet("color:black;");
         QDoubleSpinBox* tmpValue = new QDoubleSpinBox;
         tmpValue->setMaximum(100000);
         tmpValue->setValue(curr.exalt);
@@ -211,9 +234,12 @@ CurrencyDialog::CurrencyDialog(CurrencyManager& manager) : currency_manager_(man
         QDoubleSpinBox* tmpBaseValue = new QDoubleSpinBox;
         tmpBaseValue->setMaximum(100000);
         tmpBaseValue->setValue(curr.base);
+        QCheckBox *tmpChecked = new QCheckBox;
+        tmpChecked->setChecked(curr.checked);
         names_.push_back(tmpName);
         values_.push_back(tmpValue);
         base_values_.push_back(tmpBaseValue);
+        checked_.push_back(tmpChecked);
         int curr_row = layout_->rowCount() + 1;
         // To keep every vector the same size, we DO create spinboxes for the empty currency, just don't display them
         if (curr.name == "")
@@ -221,8 +247,10 @@ CurrencyDialog::CurrencyDialog(CurrencyManager& manager) : currency_manager_(man
         layout_->addWidget(names_.back(), curr_row, 0);
         layout_->addWidget(values_.back(), curr_row, 1);
         layout_->addWidget(base_values_.back(), curr_row, 2);
+        layout_->addWidget(checked_.back(), curr_row, 3);
         mapper->setMapping(base_values_.back(), base_values_.size() - 1);
         connect(base_values_.back(), SIGNAL(valueChanged(double)), mapper, SLOT(map()));
+        connect(checked_.back(), SIGNAL(stateChanged(int)), this, SLOT(OnCheckedChanged()));
     }
     int curr_row = layout_->rowCount();
     layout_->addWidget(new QLabel("Total Exalted Orbs"), curr_row, 0);
@@ -237,6 +265,10 @@ CurrencyDialog::CurrencyDialog(CurrencyManager& manager) : currency_manager_(man
     UpdateTotalWisdomValue();
     layout_->addWidget(new QLabel("Total Scrolls of Wisdom"), curr_row + 1, 0);
     layout_->addWidget(total_wisdom_value_, curr_row + 1, 1);
+    message_ = new QLabel("");
+    message_->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    UpdateMessage();
+    layout_->addWidget(message_, curr_row + 2, 0, 1, -1);
 #if defined(Q_OS_LINUX)
     setWindowFlags(Qt::WindowCloseButtonHint);
 #endif
@@ -247,13 +279,45 @@ void CurrencyDialog::OnBaseValueChanged(int index) {
     currency_manager_.UpdateBaseValue(index, base_values_[index]->value());
     currency_manager_.UpdateExaltedValue();
     values_[index]->setValue(currency_manager_.currencies()[index].exalt);
+    if (currency_manager_.currencies()[index].count > currency_manager_.currencies()[index].base)
+        names_[index]->setStyleSheet("color:green;");
+    else
+        names_[index]->setStyleSheet("color:black;");
     UpdateTotalExaltedValue();
+}
+
+void CurrencyDialog::OnCheckedChanged() {
+    for (unsigned int i=0; i < checked_.size(); i++) {
+        if (checked_[i]->isChecked() != currency_manager_.currencies()[i].checked)
+            currency_manager_.UpdateCheckedValue(i, checked_[i]->isChecked());
+    }
+    UpdateMessage();
+}
+
+void CurrencyDialog::UpdateMessage()
+{
+    QString output = "$WTS";
+    for (unsigned i=0;i<checked_.size(); i++) {
+        if (checked_[i]->isChecked())
+            output += QString::number(currency_manager_.currencies()[i].base) + CurrencyAsTag[i].c_str() + "/";
+    }
+    output.chop(1);
+    output += " for 1ex";
+    if (output.size() > 80)
+        message_->setStyleSheet("color:red;");
+    else
+        message_->setStyleSheet("color:black;");
+    message_->setText(output);
 }
 
 void CurrencyDialog::Update() {
     for (unsigned int i = 0; i < values_.size(); i++) {
         CurrencyItem curr = currency_manager_.currencies()[i];
         std::string text = curr.name + " (" + std::to_string(curr.count) + ")";
+        if (curr.count > curr.base)
+            names_[i]->setStyleSheet("color:green;");
+        else
+            names_[i]->setStyleSheet("color:black;");
         names_[i]->setText(text.c_str());
         values_[i]->setValue(curr.exalt);
     }

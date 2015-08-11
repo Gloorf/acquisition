@@ -29,6 +29,7 @@ struct CurrencyItem {
     std::string name;
     double exalt;
     double base;
+    bool checked;
 };
 
 // For now we just serialize/deserialize 'value' inside CurrencyManager
@@ -72,10 +73,14 @@ private:
     QDoubleSpinBox *total_value_;
     QDoubleSpinBox *total_wisdom_value_;
     QSignalMapper *mapper;
+    QLabel *message_;
+    std::vector<QCheckBox *> checked_;
     void UpdateTotalExaltedValue();
     void UpdateTotalWisdomValue();
+    void UpdateMessage();
 private slots:
     void OnBaseValueChanged(int index);
+    void OnCheckedChanged();
 };
 
 class CurrencyManager : public QWidget
@@ -92,6 +97,7 @@ public:
     double TotalExaltedValue();
     int TotalWisdomValue();
     void DisplayCurrency();
+    void UpdateCheckedValue(int ind, bool value);
     void Update();
     // CSV export
     void ExportCurrency();
@@ -107,6 +113,7 @@ private:
     void InitCurrency();
     void LoadCurrency();
     void SaveCurrencyBase();
+    void SaveCurrencyChecked();
 
 public slots:
     void UpdateExaltedValue();
