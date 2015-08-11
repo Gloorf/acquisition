@@ -296,7 +296,7 @@ void CurrencyDialog::OnCheckedChanged() {
 
 void CurrencyDialog::UpdateMessage()
 {
-    QString output = "$WTS";
+    QString output = "$WTS ";
     for (unsigned i=0;i<checked_.size(); i++) {
         if (checked_[i]->isChecked())
             output += QString::number(currency_manager_.currencies()[i].base) + CurrencyAsTag[i].c_str() + "/";
