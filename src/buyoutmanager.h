@@ -25,58 +25,59 @@
 enum Currency {
     CURRENCY_NONE,
     CURRENCY_ORB_OF_ALTERATION,
-    CURRENCY_ORB_OF_FUSING,
-    CURRENCY_ORB_OF_ALCHEMY,
-    CURRENCY_CHAOS_ORB,
-    CURRENCY_GCP,
-    CURRENCY_EXALTED_ORB,
     CURRENCY_CHROMATIC_ORB,
     CURRENCY_JEWELLERS_ORB,
     CURRENCY_ORB_OF_CHANCE,
     CURRENCY_CARTOGRAPHERS_CHISEL,
-    CURRENCY_ORB_OF_SCOURING,
+    CURRENCY_ORB_OF_ALCHEMY,
+    CURRENCY_ORB_OF_FUSING,
+
+    CURRENCY_CHAOS_ORB,
     CURRENCY_BLESSED_ORB,
-    CURRENCY_ORB_OF_REGRET,
+    CURRENCY_ORB_OF_SCOURING,
     CURRENCY_REGAL_ORB,
-    CURRENCY_DIVINE_ORB
+    CURRENCY_ORB_OF_REGRET,
+    CURRENCY_GCP,
+    CURRENCY_DIVINE_ORB,
+    CURRENCY_EXALTED_ORB
 };
 
 const std::vector<std::string> CurrencyAsString({
     "",
     "Orb of Alteration",
-    "Orb of Fusing",
-    "Orb of Alchemy",
-    "Chaos Orb",
-    "Gemcutter's Prism",
-    "Exalted Orb",
     "Chromatic Orb",
     "Jeweller's Orb",
     "Orb of Chance",
     "Cartographer's Chisel",
-    "Orb of Scouring",
+    "Orb of Alchemy",
+    "Orb of Fusing",
+    "Chaos Orb",
     "Blessed Orb",
-    "Orb of Regret",
+    "Orb of Scouring",
     "Regal Orb",
-    "Divine Orb"
+    "Orb of Regret",
+    "Gemcutter's Prism",
+    "Divine Orb",
+    "Exalted Orb"
 });
 
 const std::vector<std::string> CurrencyAsTag({
     "",
     "alt",
-    "fuse",
-    "alch",
-    "chaos",
-    "gcp",
-    "exa",
     "chrom",
     "jew",
     "chance",
     "chisel",
-    "scour",
+    "alch",
+    "fuse",
+    "chaos",
     "blessed",
-    "regret",
+    "scour",
     "regal",
-    "divine"
+    "regret",
+    "gcp",
+    "divine",
+    "exa"
 });
 
 enum BuyoutType {
