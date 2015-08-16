@@ -271,6 +271,8 @@ CurrencyDialog::CurrencyDialog(CurrencyManager& manager) : currency_manager_(man
     layout_->addWidget(message_, curr_row + 2, 0, 1, -1);
 #if defined(Q_OS_LINUX)
     setWindowFlags(Qt::WindowCloseButtonHint);
+    setWindowIcon(QIcon(":/icons/assets/icon.svg"));
+
 #endif
     setLayout(layout_);
 }
@@ -296,7 +298,7 @@ void CurrencyDialog::OnCheckedChanged() {
 
 void CurrencyDialog::UpdateMessage()
 {
-    QString output = "$WTS ";
+    QString output = "WTS ";
     for (unsigned i=0;i<checked_.size(); i++) {
         if (checked_[i]->isChecked())
             output += QString::number(currency_manager_.currencies()[i].base) + CurrencyAsTag[i].c_str() + "/";
