@@ -78,7 +78,24 @@ const std::vector<std::string> CurrencyAsTag({
     "regal",
     "divine"
 });
-
+const std::vector<std::string> CurrencyMultiTag({
+    "",
+    "alt",
+    "fuse,fus",
+    "alch",
+    "chaos,c",
+    "gcp",
+    "exa,ex",
+    "chrom",
+    "jew",
+    "chance",
+    "chisel",
+    "scour",
+    "blessed",
+    "regret",
+    "regal",
+    "divine"
+});
 enum BuyoutType {
     BUYOUT_TYPE_NONE,
     BUYOUT_TYPE_BUYOUT,
