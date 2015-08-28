@@ -77,6 +77,36 @@ void BuyoutManager::DeleteTab(const std::string &tab) {
     tab_buyouts_.erase(tab);
 }
 
+void BuyoutManager::BuyoutFromTabName(std::vector<std::string> tabs) {
+    for (auto tab : tabs) {
+        std::string tab_hash = "stash:" + tab;
+        Buyout bo;
+        bo.type = BUYOUT_TYPE_NONE;
+        if (ExistsTab(tab_hash))
+            continue;
+        for (unsigned int i=0; i<CurrencyAsTag.size();i++) {
+            std::string curr = CurrencyAsTag[i];
+            if (curr.empty())
+                continue;
+            std::string srt = Util::StringReplace(tab, curr, "");
+            if (tab != srt) {
+                bool ok;
+                bo.value = QString(srt.c_str()).toDouble(&ok);
+                if(!ok)
+                    continue;
+                bo.type = BUYOUT_TYPE_BUYOUT;
+                bo.currency = static_cast<Currency>(i);
+                break;
+            }
+        }
+        if (bo.type != BUYOUT_TYPE_NONE) {
+            SetTab(tab_hash, bo);
+            qDebug() << tab.c_str() << bo.value << bo.currency << CurrencyAsString[bo.currency].c_str();
+        }
+
+    }
+}
+
 std::string BuyoutManager::Serialize(const std::map<std::string, Buyout> &buyouts) {
     rapidjson::Document doc;
     doc.SetObject();

@@ -122,7 +122,7 @@ public:
     Buyout GetTab(const std::string &tab) const;
     void DeleteTab(const std::string &tab);
     bool ExistsTab(const std::string &tab) const;
-
+    void BuyoutFromTabName(std::vector<std::string> tabs);
     void Save();
     void Load();
 private:
