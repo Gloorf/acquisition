@@ -59,6 +59,8 @@ void Application::OnItemsRefreshed(const Items &items, const std::vector<std::st
     tabs_ = tabs;
     currency_manager_->Update();
     buyout_manager_->BuyoutFromTabName(tabs);
-    if (!initial_refresh)
-        shop_->Update();
+    shop_->ExpireShopData();
+    if (!initial_refresh && shop_->auto_update())
+        shop_->SubmitShopToForum();
+
 }
