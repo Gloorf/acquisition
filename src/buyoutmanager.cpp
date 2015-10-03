@@ -79,29 +79,45 @@ void BuyoutManager::DeleteTab(const std::string &tab) {
 
 void BuyoutManager::BuyoutFromTabName(std::vector<std::string> tabs) {
     for (auto tab : tabs) {
+        std::string clean_tab = tab;
         std::string tab_hash = "stash:" + tab;
+        if (ExistsTab(tab))
+            continue;
+        //Lowercase, remove spaces
+        std::transform(tab.begin(), tab.end(), tab.begin(), ::tolower);
+        tab = Util::StringReplace(tab, " ", "");
         Buyout bo;
         bo.type = BUYOUT_TYPE_NONE;
-        if (ExistsTab(tab_hash))
-            continue;
-        for (unsigned int i=0; i<CurrencyAsTag.size();i++) {
-            std::string curr = CurrencyAsTag[i];
-            if (curr.empty())
-                continue;
-            std::string srt = Util::StringReplace(tab, curr, "");
-            if (tab != srt) {
-                bool ok;
-                bo.value = QString(srt.c_str()).toDouble(&ok);
-                if(!ok)
+        bo.value = 0;
+        bo.currency = CURRENCY_NONE;
+        if (clean_tab == "no price")
+            bo.type = BUYOUT_TYPE_NO_PRICE;
+        std::string srt = Util::StringReplace(tab, "~price", "");
+
+        if (tab != srt)
+            bo.type = BUYOUT_TYPE_FIXED;
+            tab = srt;
+        for (unsigned int i=0; i<CurrencyMultiTag.size();i++) {
+            std::vector<std::string> tags = Util::StringSplit(CurrencyMultiTag[i],',');
+            for (auto curr : tags) {
+                if (curr.empty())
                     continue;
-                bo.type = BUYOUT_TYPE_BUYOUT;
-                bo.currency = static_cast<Currency>(i);
-                break;
+                std::string srt = Util::StringReplace(tab, curr, "");
+                if (tab != srt) {
+                    bool ok;
+                    bo.value = QString(srt.c_str()).toDouble(&ok);
+                    if(!ok)
+                        continue;
+                    if (bo.type == BUYOUT_TYPE_NONE)
+                        bo.type = BUYOUT_TYPE_BUYOUT;
+                    bo.currency = static_cast<Currency>(i);
+                    break;
+                }
             }
         }
         if (bo.type != BUYOUT_TYPE_NONE) {
             SetTab(tab_hash, bo);
-            qDebug() << tab.c_str() << bo.value << bo.currency << CurrencyAsString[bo.currency].c_str();
+            qDebug() << clean_tab.c_str() << bo.value << CurrencyAsString[bo.currency].c_str() << BuyoutTypeAsTag[bo.type].c_str();
         }
 
     }
